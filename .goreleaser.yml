@@ -1,0 +1,33 @@
+version: 2
+
+builds:
+  - binary: tfc
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X github.com/roboalchemist/tfc/pkg/api.version={{.Version}}
+
+archives:
+  - format: tar.gz
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+
+checksum:
+  name_template: "checksums.txt"
+
+brews:
+  - name: tfc
+    repository:
+      owner: roboalchemist
+      name: homebrew-tap
+      token: "{{ .Env.GITHUB_TOKEN }}"
+    directory: Formula
+    homepage: "https://github.com/roboalchemist/tfc"
+    description: "CLI for Terraform Cloud (HCP Terraform) API"
+    install: |
+      bin.install "tfc"

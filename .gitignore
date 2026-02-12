@@ -1,0 +1,5 @@
+tfc
+dist/
+*.exe
+*.test
+*.out
