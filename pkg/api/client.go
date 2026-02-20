@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/roboalchemist/tfc/pkg/jsonapi"
@@ -89,7 +90,11 @@ func (c *Client) GetRaw(path string) (io.ReadCloser, error) {
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		body, _ := io.ReadAll(resp.Body)
 		_ = resp.Body.Close()
-		return nil, fmt.Errorf("API error (status %d): %s", resp.StatusCode, truncate(string(body), 500))
+		detail := truncate(string(body), 500)
+		if resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden {
+			return nil, formatAuthError(resp.StatusCode, path, detail)
+		}
+		return nil, fmt.Errorf("API error (status %d): %s", resp.StatusCode, detail)
 	}
 
 	return resp.Body, nil
@@ -140,11 +145,18 @@ func (c *Client) do(method, path string, body interface{}, result interface{}) e
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		// Try to parse JSON:API errors
+		detail := truncate(string(respBody), 500)
 		var doc jsonapi.Document
 		if json.Unmarshal(respBody, &doc) == nil && len(doc.Errors) > 0 {
-			return fmt.Errorf("API error (status %d): %s — %s", resp.StatusCode, doc.Errors[0].Title, doc.Errors[0].Detail)
+			detail = fmt.Sprintf("%s — %s", doc.Errors[0].Title, doc.Errors[0].Detail)
 		}
-		return fmt.Errorf("API error (status %d): %s", resp.StatusCode, truncate(string(respBody), 500))
+
+		// Provide permission-aware hints for 401/403
+		if resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden {
+			return formatAuthError(resp.StatusCode, path, detail)
+		}
+
+		return fmt.Errorf("API error (status %d): %s", resp.StatusCode, detail)
 	}
 
 	// 204 No Content — nothing to unmarshal
@@ -197,6 +209,45 @@ func containsQuery(path string) bool {
 		}
 	}
 	return false
+}
+
+// permissionHint returns a user-friendly suggestion based on the API path
+// for 403 Forbidden responses.
+func permissionHint(path string) string {
+	p := strings.ToLower(path)
+
+	switch {
+	case strings.Contains(p, "/policy-checks/") && strings.Contains(p, "/actions/override"):
+		return "Requires 'Override Soft-Mandatory Policies' permission."
+	case strings.Contains(p, "/runs/") && strings.Contains(p, "/actions/"):
+		return "Requires 'Manage Runs' workspace permission."
+	case strings.Contains(p, "/runs"):
+		if strings.Contains(p, "/actions/") {
+			return "Requires 'Manage Runs' workspace permission."
+		}
+		return "Requires 'Manage Runs' workspace permission."
+	case strings.Contains(p, "/state-versions"):
+		return "Requires 'Manage State Versions' workspace permission."
+	case strings.Contains(p, "/variables"):
+		return "Requires 'Manage Variables' workspace permission."
+	case strings.Contains(p, "/workspaces"):
+		return "Requires 'Manage Workspaces' organization permission."
+	default:
+		return "Ensure your team has the required workspace/organization permissions."
+	}
+}
+
+func formatAuthError(statusCode int, path, detail string) error {
+	if statusCode == http.StatusUnauthorized {
+		msg := fmt.Sprintf("Authentication failed (401): %s\nHint: Check that TFC_TOKEN is set and the token hasn't expired.", detail)
+		return fmt.Errorf("%s", msg)
+	}
+	if statusCode == http.StatusForbidden {
+		hint := permissionHint(path)
+		msg := fmt.Sprintf("Permission denied (403): %s\nHint: %s", detail, hint)
+		return fmt.Errorf("%s", msg)
+	}
+	return nil
 }
 
 func truncate(s string, max int) string {

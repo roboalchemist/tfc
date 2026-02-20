@@ -11,6 +11,7 @@ const (
 	ErrTypeNotFound      = "not_found"
 	ErrTypeUsageError    = "usage_error"
 	ErrTypeAPIError      = "api_error"
+	ErrTypePermission    = "permission_error"
 	ErrTypeInternalError = "internal_error"
 	ErrTypeTimeout       = "timeout"
 )
@@ -61,4 +62,8 @@ func NewInternalError(message string) *StructuredError {
 
 func NewTimeoutError(message string) *StructuredError {
 	return NewError(ErrTypeTimeout, message, 2)
+}
+
+func NewPermissionError(message string) *StructuredError {
+	return NewError(ErrTypePermission, message, 1)
 }
