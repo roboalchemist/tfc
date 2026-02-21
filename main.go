@@ -5,8 +5,8 @@ import (
 	"errors"
 	"os"
 
-	"github.com/roboalchemist/tfc/cmd"
-	"github.com/roboalchemist/tfc/pkg/output"
+	"gitea.roboalch.com/roboalchemist/tfc/cmd"
+	"gitea.roboalch.com/roboalchemist/tfc/pkg/output"
 )
 
 // version is set via ldflags at build time: -X main.version=x.y.z

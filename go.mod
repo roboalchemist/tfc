@@ -1,4 +1,4 @@
-module github.com/roboalchemist/tfc
+module gitea.roboalch.com/roboalchemist/tfc
 
 go 1.25.7
 

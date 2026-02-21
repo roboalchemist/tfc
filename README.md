@@ -13,13 +13,13 @@ brew install roboalchemist/tap/tfc
 ### Go
 
 ```bash
-go install github.com/roboalchemist/tfc@latest
+go install gitea.roboalch.com/roboalchemist/tfc@latest
 ```
 
 ### From Source
 
 ```bash
-git clone https://github.com/roboalchemist/tfc.git
+git clone https://gitea.roboalch.com/roboalchemist/tfc.git
 cd tfc
 make install
 ```

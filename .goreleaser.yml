@@ -11,7 +11,7 @@ builds:
       - amd64
       - arm64
     ldflags:
-      - -s -w -X main.version={{.Version}} -X github.com/roboalchemist/tfc/pkg/api.version={{.Version}}
+      - -s -w -X main.version={{.Version}} -X gitea.roboalch.com/roboalchemist/tfc/pkg/api.version={{.Version}}
 
 archives:
   - format: tar.gz
@@ -27,7 +27,7 @@ brews:
       name: homebrew-tap
       token: "{{ .Env.GITHUB_TOKEN }}"
     directory: Formula
-    homepage: "https://github.com/roboalchemist/tfc"
+    homepage: "https://gitea.roboalch.com/roboalchemist/tfc"
     description: "CLI for Terraform Cloud (HCP Terraform) API"
     install: |
       bin.install "tfc"

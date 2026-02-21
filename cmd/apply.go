@@ -5,8 +5,8 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/roboalchemist/tfc/pkg/jsonapi"
-	"github.com/roboalchemist/tfc/pkg/output"
+	"gitea.roboalch.com/roboalchemist/tfc/pkg/jsonapi"
+	"gitea.roboalch.com/roboalchemist/tfc/pkg/output"
 	"github.com/spf13/cobra"
 )
 

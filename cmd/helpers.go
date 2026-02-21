@@ -5,9 +5,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/roboalchemist/tfc/pkg/api"
-	"github.com/roboalchemist/tfc/pkg/auth"
-	"github.com/roboalchemist/tfc/pkg/output"
+	"gitea.roboalch.com/roboalchemist/tfc/pkg/api"
+	"gitea.roboalch.com/roboalchemist/tfc/pkg/auth"
+	"gitea.roboalch.com/roboalchemist/tfc/pkg/output"
 )
 
 // newClient creates an authenticated Terraform Cloud API client.

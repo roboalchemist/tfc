@@ -3,7 +3,7 @@
 BINARY_NAME=tfc
 GO_FILES=$(shell find . -type f -name '*.go' | grep -v vendor/)
 VERSION=$(shell git describe --tags --exact-match 2>/dev/null || git rev-parse --short HEAD 2>/dev/null || echo dev)
-LDFLAGS=-ldflags "-X main.version=$(VERSION) -X github.com/roboalchemist/tfc/pkg/api.version=$(VERSION)"
+LDFLAGS=-ldflags "-X main.version=$(VERSION) -X gitea.roboalch.com/roboalchemist/tfc/pkg/api.version=$(VERSION)"
 
 all: build
 

@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/roboalchemist/tfc/pkg/jsonapi"
+	"gitea.roboalch.com/roboalchemist/tfc/pkg/jsonapi"
 )
 
 // version is injected at build time, used in User-Agent.
