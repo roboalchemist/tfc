@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/roboalchemist/tfc/pkg/jsonapi"
 	"github.com/roboalchemist/tfc/pkg/output"
@@ -36,9 +37,7 @@ var runShowCmd = &cobra.Command{
 var runCreateCmd = &cobra.Command{
 	Use:   "create",
 	Short: "Create a new run",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return notImplemented("run create")
-	},
+	RunE:  runRunCreate,
 }
 
 var runApplyCmd = &cobra.Command{
@@ -209,6 +208,130 @@ func runRunShow(cmd *cobra.Command, args []string) error {
 			{"Auto Apply", boolStr(a.AutoApply)},
 			{"Plan ID", defaultStr(planID, "-")},
 			{"Apply ID", defaultStr(applyID, "-")},
+			{"Created", a.CreatedAt},
+		},
+	}
+
+	return output.RenderTable(td, data, opts)
+}
+
+// resolveWorkspaceID resolves a workspace name or ID to a workspace ID.
+// If the value starts with "ws-", it is returned as-is. Otherwise, it is
+// looked up by name using the organization from --org / TFC_ORG.
+func resolveWorkspaceID(workspace string) (string, error) {
+	if strings.HasPrefix(workspace, "ws-") {
+		return workspace, nil
+	}
+
+	client, err := newClient()
+	if err != nil {
+		return "", err
+	}
+	org, err := requireOrg()
+	if err != nil {
+		return "", err
+	}
+
+	var doc jsonapi.Document
+	path := fmt.Sprintf("/organizations/%s/workspaces/%s", org, workspace)
+	if err := client.Get(path, &doc); err != nil {
+		return "", fmt.Errorf("resolve workspace %q: %w", workspace, err)
+	}
+	res, err := jsonapi.ParseSingle(&doc)
+	if err != nil {
+		return "", fmt.Errorf("resolve workspace %q: %w", workspace, err)
+	}
+	return res.ID, nil
+}
+
+func runRunCreate(cmd *cobra.Command, args []string) error {
+	workspace, _ := cmd.Flags().GetString("workspace")
+	if workspace == "" {
+		return output.NewUsageError("--workspace is required")
+	}
+
+	wsID, err := resolveWorkspaceID(workspace)
+	if err != nil {
+		return output.NewAPIError(err.Error())
+	}
+
+	message, _ := cmd.Flags().GetString("message")
+	isDestroy, _ := cmd.Flags().GetBool("is-destroy")
+	autoApply, _ := cmd.Flags().GetBool("auto-apply")
+	target, _ := cmd.Flags().GetString("target")
+
+	// Build JSON:API body with relationships (WrapForCreate doesn't support relationships)
+	attrs := map[string]interface{}{}
+	if message != "" {
+		attrs["message"] = message
+	}
+	if isDestroy {
+		attrs["is-destroy"] = true
+	}
+	if autoApply {
+		attrs["auto-apply"] = true
+	}
+	if target != "" {
+		targets := strings.Split(target, ",")
+		for i := range targets {
+			targets[i] = strings.TrimSpace(targets[i])
+		}
+		attrs["target-addrs"] = targets
+	}
+
+	body := map[string]interface{}{
+		"data": map[string]interface{}{
+			"type":       "runs",
+			"attributes": attrs,
+			"relationships": map[string]interface{}{
+				"workspace": map[string]interface{}{
+					"data": map[string]interface{}{
+						"type": "workspaces",
+						"id":   wsID,
+					},
+				},
+			},
+		},
+	}
+
+	client, err := newClient()
+	if err != nil {
+		return err
+	}
+
+	var doc jsonapi.Document
+	if err := client.Post("/runs", body, &doc); err != nil {
+		return output.NewAPIError(err.Error())
+	}
+
+	res, err := jsonapi.ParseSingle(&doc)
+	if err != nil {
+		return output.NewAPIError(err.Error())
+	}
+
+	var a runAttrs
+	jsonapi.UnmarshalAttributes(res, &a)
+
+	planID := extractRelationshipID(res, "plan")
+
+	opts := GetOutputOptions()
+
+	type runDetail struct {
+		ID     string   `json:"id"`
+		PlanID string   `json:"plan_id,omitempty"`
+		Attrs  runAttrs `json:"attributes"`
+	}
+	data := runDetail{ID: res.ID, PlanID: planID, Attrs: a}
+
+	td := output.TableData{
+		Headers: []string{"FIELD", "VALUE"},
+		Rows: [][]string{
+			{"ID", res.ID},
+			{"Status", a.Status},
+			{"Message", a.Message},
+			{"Is Destroy", boolStr(a.IsDestroy)},
+			{"Auto Apply", boolStr(a.AutoApply)},
+			{"Plan ID", defaultStr(planID, "-")},
 			{"Created", a.CreatedAt},
 		},
 	}
