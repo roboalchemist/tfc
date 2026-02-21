@@ -190,8 +190,8 @@ func runRunShow(cmd *cobra.Command, args []string) error {
 
 	type runDetail struct {
 		ID      string   `json:"id"`
-		PlanID  string   `json:"plan_id,omitempty"`
-		ApplyID string   `json:"apply_id,omitempty"`
+		PlanID  string   `json:"plan_id"`
+		ApplyID string   `json:"apply_id"`
 		Attrs   runAttrs `json:"attributes"`
 	}
 	data := runDetail{ID: res.ID, PlanID: planID, ApplyID: applyID, Attrs: a}
@@ -318,7 +318,7 @@ func runRunCreate(cmd *cobra.Command, args []string) error {
 
 	type runDetail struct {
 		ID     string   `json:"id"`
-		PlanID string   `json:"plan_id,omitempty"`
+		PlanID string   `json:"plan_id"`
 		Attrs  runAttrs `json:"attributes"`
 	}
 	data := runDetail{ID: res.ID, PlanID: planID, Attrs: a}

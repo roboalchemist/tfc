@@ -1,8 +1,6 @@
 package output
 
-import "strings"
-
-// PruneEmpty recursively removes null, empty strings, whitespace-only strings,
+// PruneEmpty recursively removes null values,
 // empty arrays, and empty objects from a JSON-compatible value.
 func PruneEmpty(v interface{}) interface{} {
 	result := pruneEmpty(v)
@@ -39,9 +37,6 @@ func pruneEmpty(v interface{}) interface{} {
 		}
 		return pruned
 	case string:
-		if strings.TrimSpace(val) == "" {
-			return nil
-		}
 		return val
 	case float64:
 		return val
