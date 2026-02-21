@@ -228,6 +228,112 @@ func TestRunCreate_DestroyAndTargets(t *testing.T) {
 	}
 }
 
+func TestRunDiscard_Success(t *testing.T) {
+	var capturedPath string
+	var capturedMethod string
+
+	ts := setupTestServer(func(w http.ResponseWriter, r *http.Request) {
+		capturedPath = r.URL.Path
+		capturedMethod = r.Method
+		w.WriteHeader(204)
+	})
+	defer ts.Close()
+
+	t.Setenv("TFC_TOKEN", "test-token")
+	t.Setenv("TFC_ADDRESS", ts.URL)
+
+	cmd := rootCmd
+	cmd.SetArgs([]string{"run", "discard", "run-abc123"})
+	err := cmd.Execute()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if capturedMethod != "POST" {
+		t.Errorf("expected POST, got %s", capturedMethod)
+	}
+	if capturedPath != "/api/v2/runs/run-abc123/actions/discard" {
+		t.Errorf("expected /api/v2/runs/run-abc123/actions/discard, got %s", capturedPath)
+	}
+}
+
+func TestRunDiscard_WithComment(t *testing.T) {
+	var capturedBody map[string]string
+
+	ts := setupTestServer(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "POST" {
+			json.NewDecoder(r.Body).Decode(&capturedBody)
+		}
+		w.WriteHeader(204)
+	})
+	defer ts.Close()
+
+	t.Setenv("TFC_TOKEN", "test-token")
+	t.Setenv("TFC_ADDRESS", ts.URL)
+
+	cmd := rootCmd
+	cmd.SetArgs([]string{"run", "discard", "run-abc123", "--comment", "no longer needed"})
+	err := cmd.Execute()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if capturedBody == nil {
+		t.Fatal("expected request body with comment")
+	}
+	if capturedBody["comment"] != "no longer needed" {
+		t.Errorf("expected comment 'no longer needed', got %q", capturedBody["comment"])
+	}
+}
+
+func TestRunCancel_Success(t *testing.T) {
+	var capturedPath string
+
+	ts := setupTestServer(func(w http.ResponseWriter, r *http.Request) {
+		capturedPath = r.URL.Path
+		w.WriteHeader(204)
+	})
+	defer ts.Close()
+
+	t.Setenv("TFC_TOKEN", "test-token")
+	t.Setenv("TFC_ADDRESS", ts.URL)
+
+	cmd := rootCmd
+	cmd.SetArgs([]string{"run", "cancel", "run-xyz789"})
+	err := cmd.Execute()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if capturedPath != "/api/v2/runs/run-xyz789/actions/cancel" {
+		t.Errorf("expected /api/v2/runs/run-xyz789/actions/cancel, got %s", capturedPath)
+	}
+}
+
+func TestRunCancel_Force(t *testing.T) {
+	var capturedPath string
+
+	ts := setupTestServer(func(w http.ResponseWriter, r *http.Request) {
+		capturedPath = r.URL.Path
+		w.WriteHeader(204)
+	})
+	defer ts.Close()
+
+	t.Setenv("TFC_TOKEN", "test-token")
+	t.Setenv("TFC_ADDRESS", ts.URL)
+
+	cmd := rootCmd
+	cmd.SetArgs([]string{"run", "cancel", "run-xyz789", "--force"})
+	err := cmd.Execute()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if capturedPath != "/api/v2/runs/run-xyz789/actions/force-cancel" {
+		t.Errorf("expected /api/v2/runs/run-xyz789/actions/force-cancel, got %s", capturedPath)
+	}
+}
+
 func TestResolveWorkspaceID_AlreadyID(t *testing.T) {
 	id, err := resolveWorkspaceID("ws-abc123")
 	if err != nil {

@@ -53,18 +53,14 @@ var runDiscardCmd = &cobra.Command{
 	Use:   "discard [id]",
 	Short: "Discard a run that is paused waiting for confirmation",
 	Args:  cobra.ExactArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return notImplemented("run discard")
-	},
+	RunE:  runRunDiscard,
 }
 
 var runCancelCmd = &cobra.Command{
 	Use:   "cancel [id]",
 	Short: "Cancel a run that is currently planning or applying",
 	Args:  cobra.ExactArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return notImplemented("run cancel")
-	},
+	RunE:  runRunCancel,
 }
 
 func init() {
@@ -337,6 +333,56 @@ func runRunCreate(cmd *cobra.Command, args []string) error {
 	}
 
 	return output.RenderTable(td, data, opts)
+}
+
+func runRunDiscard(cmd *cobra.Command, args []string) error {
+	client, err := newClient()
+	if err != nil {
+		return err
+	}
+
+	runID := args[0]
+	path := fmt.Sprintf("/runs/%s/actions/discard", runID)
+
+	var body interface{}
+	comment, _ := cmd.Flags().GetString("comment")
+	if comment != "" {
+		body = map[string]string{"comment": comment}
+	}
+
+	if err := client.Post(path, body, nil); err != nil {
+		return output.NewAPIError(err.Error())
+	}
+
+	fmt.Fprintf(cmd.ErrOrStderr(), "Run %s discarded successfully\n", runID)
+	return nil
+}
+
+func runRunCancel(cmd *cobra.Command, args []string) error {
+	client, err := newClient()
+	if err != nil {
+		return err
+	}
+
+	runID := args[0]
+	force, _ := cmd.Flags().GetBool("force")
+
+	action := "cancel"
+	if force {
+		action = "force-cancel"
+	}
+	path := fmt.Sprintf("/runs/%s/actions/%s", runID, action)
+
+	if err := client.Post(path, nil, nil); err != nil {
+		return output.NewAPIError(err.Error())
+	}
+
+	if force {
+		fmt.Fprintf(cmd.ErrOrStderr(), "Run %s force-cancelled successfully\n", runID)
+	} else {
+		fmt.Fprintf(cmd.ErrOrStderr(), "Run %s cancelled successfully\n", runID)
+	}
+	return nil
 }
 
 // extractRelationshipID pulls the "id" from a relationship's data object.
