@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -225,6 +226,104 @@ func TestRunCreate_DestroyAndTargets(t *testing.T) {
 	}
 	if targets[0] != "aws_instance.web" || targets[1] != "aws_s3_bucket.data" {
 		t.Errorf("unexpected targets: %v", targets)
+	}
+}
+
+func TestRunApply_Success(t *testing.T) {
+	var capturedPath string
+	var capturedMethod string
+
+	ts := setupTestServer(func(w http.ResponseWriter, r *http.Request) {
+		capturedPath = r.URL.Path
+		capturedMethod = r.Method
+
+		if r.Method == "POST" && r.URL.Path == "/api/v2/runs/run-abc123/actions/apply" {
+			w.WriteHeader(202)
+			return
+		}
+		w.WriteHeader(404)
+	})
+	defer ts.Close()
+
+	t.Setenv("TFC_TOKEN", "test-token")
+	t.Setenv("TFC_ADDRESS", ts.URL)
+
+	cmd := rootCmd
+	cmd.SetArgs([]string{"run", "apply", "run-abc123"})
+	err := cmd.Execute()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if capturedMethod != "POST" {
+		t.Errorf("expected POST, got %s", capturedMethod)
+	}
+	if capturedPath != "/api/v2/runs/run-abc123/actions/apply" {
+		t.Errorf("expected /api/v2/runs/run-abc123/actions/apply, got %s", capturedPath)
+	}
+}
+
+func TestRunApply_WithComment(t *testing.T) {
+	var capturedBody map[string]string
+
+	ts := setupTestServer(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "POST" && r.URL.Path == "/api/v2/runs/run-comment456/actions/apply" {
+			json.NewDecoder(r.Body).Decode(&capturedBody)
+			w.WriteHeader(202)
+			return
+		}
+		w.WriteHeader(404)
+	})
+	defer ts.Close()
+
+	t.Setenv("TFC_TOKEN", "test-token")
+	t.Setenv("TFC_ADDRESS", ts.URL)
+
+	cmd := rootCmd
+	cmd.SetArgs([]string{"run", "apply", "run-comment456", "--comment", "Approved by team lead"})
+	err := cmd.Execute()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if capturedBody == nil {
+		t.Fatal("expected request body with comment")
+	}
+	if capturedBody["comment"] != "Approved by team lead" {
+		t.Errorf("expected comment 'Approved by team lead', got %q", capturedBody["comment"])
+	}
+}
+
+func TestRunApply_NoComment_NilBody(t *testing.T) {
+	var bodyBytes []byte
+
+	ts := setupTestServer(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "POST" && r.URL.Path == "/api/v2/runs/run-nobody789/actions/apply" {
+			var err error
+			bodyBytes, err = io.ReadAll(r.Body)
+			if err != nil {
+				t.Fatalf("failed to read body: %v", err)
+			}
+			w.WriteHeader(202)
+			return
+		}
+		w.WriteHeader(404)
+	})
+	defer ts.Close()
+
+	t.Setenv("TFC_TOKEN", "test-token")
+	t.Setenv("TFC_ADDRESS", ts.URL)
+
+	cmd := rootCmd
+	// Explicitly set --comment to empty to reset any flag leakage from prior tests
+	cmd.SetArgs([]string{"run", "apply", "run-nobody789", "--comment", ""})
+	err := cmd.Execute()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if len(bodyBytes) != 0 {
+		t.Errorf("expected empty body when no comment, got %q", string(bodyBytes))
 	}
 }
 

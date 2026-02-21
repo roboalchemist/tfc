@@ -44,9 +44,7 @@ var runApplyCmd = &cobra.Command{
 	Use:   "apply [id]",
 	Short: "Apply a run that is paused waiting for confirmation",
 	Args:  cobra.ExactArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return notImplemented("run apply")
-	},
+	RunE:  runRunApply,
 }
 
 var runDiscardCmd = &cobra.Command{
@@ -337,6 +335,30 @@ func runRunCreate(cmd *cobra.Command, args []string) error {
 	}
 
 	return output.RenderTable(td, data, opts)
+}
+
+func runRunApply(cmd *cobra.Command, args []string) error {
+	client, err := newClient()
+	if err != nil {
+		return err
+	}
+
+	runID := args[0]
+	comment, _ := cmd.Flags().GetString("comment")
+
+	path := fmt.Sprintf("/runs/%s/actions/apply", runID)
+
+	var body interface{}
+	if comment != "" {
+		body = map[string]string{"comment": comment}
+	}
+
+	if err := client.Post(path, body, nil); err != nil {
+		return output.NewAPIError(err.Error())
+	}
+
+	fmt.Fprintf(cmd.ErrOrStderr(), "Run %s apply initiated\n", runID)
+	return nil
 }
 
 // extractRelationshipID pulls the "id" from a relationship's data object.
