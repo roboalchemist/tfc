@@ -18,27 +18,42 @@ export TFC_ADDRESS="https://tfe.example.com"
 ## Quick Reference
 
 ```bash
-# List workspaces
+# Workspaces
 tfc ws list
 tfc ws list --search "prod"
-
-# Show workspace details
 tfc ws show my-workspace
 
-# List runs for a workspace
+# Runs (full lifecycle)
 tfc run list --workspace my-workspace
-
-# Show run details
 tfc run show run-abc123
+tfc run create --workspace my-workspace --message "Deploy update"
+tfc run apply run-abc123 --comment "Approved"
+tfc run discard run-abc123 --comment "Not needed"
+tfc run cancel run-abc123
+tfc run cancel run-abc123 --force
 
-# View plan log
+# Plans & Applies
+tfc plan show plan-abc123
 tfc plan log plan-abc123
+tfc apply show apply-abc123
+tfc apply log apply-abc123
 
-# List variables
+# Policy checks
+tfc pc list --run run-abc123
+tfc pc show polchk-abc123
+tfc pc override polchk-abc123
+
+# Variables, teams, projects, state versions
 tfc var list --workspace ws-abc123
-
-# List teams
+tfc var show var-abc123
 tfc team list
+tfc team show team-abc123
+tfc proj list
+tfc proj show prj-abc123
+tfc sv list --workspace ws-abc123
+tfc sv show sv-abc123
+tfc org list
+tfc org show my-org
 
 # JSON output with jq
 tfc ws list --json --jq '.[].name'
@@ -60,26 +75,28 @@ tfc run show run-abc123 --json --fields status,message
 
 ## Command Groups
 
-| Command | Alias | Description |
-|---------|-------|-------------|
-| `workspace` | `ws` | Manage workspaces |
-| `run` | | Manage runs |
-| `plan` | | View plan details/logs |
-| `apply` | | View apply details/logs |
-| `state-version` | `sv` | Manage state versions |
-| `var` | | Manage workspace variables |
-| `varset` | `vs` | Manage variable sets |
-| `org` | | View organizations |
-| `team` | | Manage teams |
-| `team-access` | `ta` | Manage team workspace access |
-| `project` | `proj` | Manage projects |
-| `policy` | `pol` | View policies |
-| `policy-set` | `ps` | View policy sets |
-| `policy-check` | `pc` | Manage policy checks |
-| `run-task` | `rt` | Manage run tasks |
-| `notification` | `notif` | Manage notifications |
-| `agent-pool` | `ap` | View agent pools |
-| `audit-trail` | `audit` | View audit events |
-| `config-version` | `cv` | Manage config versions |
+| Command | Alias | Description | Status |
+|---------|-------|-------------|--------|
+| `workspace` | `ws` | Manage workspaces | list, show |
+| `run` | | Manage runs | list, show, create, apply, discard, cancel |
+| `plan` | | View plan details/logs | show, log |
+| `apply` | | View apply details/logs | show, log |
+| `state-version` | `sv` | Manage state versions | list, show |
+| `var` | | Manage workspace variables | list, show |
+| `varset` | `vs` | Manage variable sets | stub |
+| `org` | | View organizations | list, show |
+| `team` | | Manage teams | list, show |
+| `team-access` | `ta` | Manage team workspace access | stub |
+| `project` | `proj` | Manage projects | list, show |
+| `policy` | `pol` | View policies | stub |
+| `policy-set` | `ps` | View policy sets | stub |
+| `policy-check` | `pc` | Manage policy checks | list, show, override |
+| `run-task` | `rt` | Manage run tasks | stub |
+| `notification` | `notif` | Manage notifications | stub |
+| `agent-pool` | `ap` | View agent pools | stub |
+| `audit-trail` | `audit` | View audit events | stub |
+| `config-version` | `cv` | Manage config versions | stub |
+
+**Status key**: Listed subcommands are fully implemented. "stub" = all subcommands return "not yet implemented".
 
 See [reference/commands.md](reference/commands.md) for full command details.

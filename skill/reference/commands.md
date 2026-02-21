@@ -1,5 +1,7 @@
 # tfc Command Reference
 
+Commands marked with (stub) return "not yet implemented".
+
 ## Global Flags
 
 | Flag | Short | Description |
@@ -19,11 +21,11 @@
 ```bash
 tfc ws list [--search NAME] [--page-size N]
 tfc ws show <name-or-id>
-tfc ws create <name> [--description TEXT] [--terraform-version VER] [--working-directory DIR] [--auto-apply] [--vcs-repo REPO] [--project-id ID]
-tfc ws update <name-or-id> [--description TEXT] [--terraform-version VER] [--working-directory DIR] [--auto-apply]
-tfc ws delete <name-or-id>
-tfc ws lock <id> [--reason TEXT]
-tfc ws unlock <id>
+tfc ws create <name> [...]                    # (stub)
+tfc ws update <name-or-id> [...]              # (stub)
+tfc ws delete <name-or-id>                    # (stub)
+tfc ws lock <id> [--reason TEXT]              # (stub)
+tfc ws unlock <id>                            # (stub)
 ```
 
 ## run
@@ -56,8 +58,8 @@ tfc apply log <id>
 ```bash
 tfc sv list --workspace <name-or-id> [--page-size N]
 tfc sv show <id>
-tfc sv create --workspace <id> --file <path> [--serial N] [--md5 HASH] [--lineage UUID]
-tfc sv download <id>
+tfc sv create --workspace <id> --file <path> [...]  # (stub)
+tfc sv download <id>                                 # (stub)
 ```
 
 ## var
@@ -65,21 +67,21 @@ tfc sv download <id>
 ```bash
 tfc var list --workspace <id>
 tfc var show <id>
-tfc var create --workspace <id> --key KEY [--value VAL] [--description TEXT] [--category terraform|env] [--hcl] [--sensitive]
-tfc var update <id> --workspace <id> [--key KEY] [--value VAL] [--description TEXT] [--hcl] [--sensitive]
-tfc var delete <id> --workspace <id>
+tfc var create --workspace <id> --key KEY [...]   # (stub)
+tfc var update <id> --workspace <id> [...]        # (stub)
+tfc var delete <id> --workspace <id>              # (stub)
 ```
 
-## varset (vs)
+## varset (vs) — all stubs
 
 ```bash
-tfc vs list
-tfc vs show <id>
-tfc vs create <name> [--description TEXT] [--global]
-tfc vs update <id> [--name NAME] [--description TEXT] [--global]
-tfc vs delete <id>
-tfc vs apply <id> --workspace <ids...>
-tfc vs remove <id> --workspace <ids...>
+tfc vs list                                       # (stub)
+tfc vs show <id>                                  # (stub)
+tfc vs create <name> [...]                        # (stub)
+tfc vs update <id> [...]                          # (stub)
+tfc vs delete <id>                                # (stub)
+tfc vs apply <id> --workspace <ids...>            # (stub)
+tfc vs remove <id> --workspace <ids...>           # (stub)
 ```
 
 ## org
@@ -94,19 +96,19 @@ tfc org show [name]
 ```bash
 tfc team list
 tfc team show <id>
-tfc team create <name> [--visibility secret|organization] [--manage-workspaces] [--manage-modules] [--manage-providers] [--manage-policies]
-tfc team update <id> [--name NAME] [--visibility secret|organization]
-tfc team delete <id>
+tfc team create <name> [...]                      # (stub)
+tfc team update <id> [...]                        # (stub)
+tfc team delete <id>                              # (stub)
 ```
 
-## team-access (ta)
+## team-access (ta) — all stubs
 
 ```bash
-tfc ta list --workspace <id>
-tfc ta show <id>
-tfc ta add --workspace <id> --team <id> [--access read|plan|write|admin|custom]
-tfc ta update <id> [--access read|plan|write|admin|custom]
-tfc ta remove <id>
+tfc ta list --workspace <id>                      # (stub)
+tfc ta show <id>                                  # (stub)
+tfc ta add --workspace <id> --team <id> [...]     # (stub)
+tfc ta update <id> [...]                          # (stub)
+tfc ta remove <id>                                # (stub)
 ```
 
 ## project (proj)
@@ -114,23 +116,23 @@ tfc ta remove <id>
 ```bash
 tfc proj list
 tfc proj show <id>
-tfc proj create <name> [--description TEXT]
-tfc proj update <id> [--name NAME] [--description TEXT]
-tfc proj delete <id>
+tfc proj create <name> [--description TEXT]       # (stub)
+tfc proj update <id> [...]                        # (stub)
+tfc proj delete <id>                              # (stub)
 ```
 
-## policy (pol)
+## policy (pol) — all stubs
 
 ```bash
-tfc pol list
-tfc pol show <id>
+tfc pol list                                      # (stub)
+tfc pol show <id>                                 # (stub)
 ```
 
-## policy-set (ps)
+## policy-set (ps) — all stubs
 
 ```bash
-tfc ps list
-tfc ps show <id>
+tfc ps list                                       # (stub)
+tfc ps show <id>                                  # (stub)
 ```
 
 ## policy-check (pc)
@@ -141,46 +143,46 @@ tfc pc show <id>
 tfc pc override <id>
 ```
 
-## run-task (rt)
+## run-task (rt) — all stubs
 
 ```bash
-tfc rt list
-tfc rt show <id>
-tfc rt create <name> --url <URL> [--description TEXT] [--hmac-key KEY] [--enabled]
-tfc rt update <id> [--name NAME] [--url URL] [--description TEXT] [--enabled]
-tfc rt delete <id>
+tfc rt list                                       # (stub)
+tfc rt show <id>                                  # (stub)
+tfc rt create <name> --url <URL> [...]            # (stub)
+tfc rt update <id> [...]                          # (stub)
+tfc rt delete <id>                                # (stub)
 ```
 
-## notification (notif)
+## notification (notif) — all stubs
 
 ```bash
-tfc notif list --workspace <id>
-tfc notif show <id>
-tfc notif create <name> --workspace <id> --destination-type <type> [--url URL] [--triggers EVENTS] [--enabled]
-tfc notif update <id> [--name NAME] [--url URL] [--triggers EVENTS] [--enabled]
-tfc notif delete <id>
+tfc notif list --workspace <id>                   # (stub)
+tfc notif show <id>                               # (stub)
+tfc notif create <name> --workspace <id> [...]    # (stub)
+tfc notif update <id> [...]                       # (stub)
+tfc notif delete <id>                             # (stub)
 ```
 
-## agent-pool (ap)
+## agent-pool (ap) — all stubs
 
 ```bash
-tfc ap list
-tfc ap show <id>
+tfc ap list                                       # (stub)
+tfc ap show <id>                                  # (stub)
 ```
 
-## audit-trail (audit)
+## audit-trail (audit) — all stubs
 
 ```bash
-tfc audit list [--since TIMESTAMP] [--page-size N]
+tfc audit list [--since TIMESTAMP] [--page-size N]  # (stub)
 ```
 
-## config-version (cv)
+## config-version (cv) — all stubs
 
 ```bash
-tfc cv list --workspace <id> [--page-size N]
-tfc cv show <id>
-tfc cv create --workspace <id> [--auto-queue-runs] [--speculative]
-tfc cv upload <id> <file>
+tfc cv list --workspace <id> [--page-size N]      # (stub)
+tfc cv show <id>                                  # (stub)
+tfc cv create --workspace <id> [...]              # (stub)
+tfc cv upload <id> <file>                         # (stub)
 ```
 
 ## Environment Variables
