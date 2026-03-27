@@ -1,24 +1,51 @@
-name: Bump Homebrew Private Tap
-
+name: Bump Homebrew Formula
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - 'v*'
 
 jobs:
   bump:
     runs-on: ubuntu-latest
     steps:
-      - name: Update Homebrew formula
+      - uses: actions/checkout@v4
+      - name: Get tag version and revision
+        id: tag
         run: |
-          TAG=${{ gitea.event.release.tag_name }}
-          VERSION=${TAG#v}
-          git config --global user.name "gitea-actions"
-          git config --global user.email "actions@gitea.roboalch.com"
-          git clone https://roboalchemist:${{ secrets.TAP_TOKEN }}@gitea.roboalch.com/roboalchemist/homebrew-private.git
-          cd homebrew-private
-          sed -i "s|version \"[^\"]*\"|version \"${VERSION}\"|" Formula/tfc.rb
-          sed -i "s|tag: \"[^\"]*\"|tag: \"${TAG}\"|" Formula/tfc.rb
+          echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+          echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          echo "REVISION=${GITHUB_SHA}" >> $GITHUB_OUTPUT
+      - name: Update formula
+        env:
+          TAP_TOKEN: ${{ secrets.TAP_TOKEN }}
+        run: |
+          # Clone the tap
+          git clone https://ci:${TAP_TOKEN}@gitea.roboalch.com/roboalchemist/homebrew-private.git tap
+          cd tap
+          # Update the formula using git+ssh URL pattern (private repo, no tarball auth needed)
+          cat > Formula/tfc.rb << FORMULA
+          class Tfc < Formula
+            desc "CLI for Terraform Cloud (HCP Terraform) API"
+            homepage "https://gitea.roboalch.com/roboalchemist/tfc"
+            url "ssh://git@gitea.roboalch.com:2222/roboalchemist/tfc.git",
+                tag:      "${{ steps.tag.outputs.TAG }}",
+                revision: "${{ steps.tag.outputs.REVISION }}",
+                using:    :git
+            version "${{ steps.tag.outputs.VERSION }}"
+            license "MIT"
+            depends_on "go" => :build
+            def install
+              ldflags = "-s -w -X main.version=\#{version}"
+              system "go", "build", *std_go_args(ldflags:)
+            end
+            test do
+              assert_match "Terraform Cloud from the command line", shell_output("\#{bin}/tfc --help 2>&1")
+            end
+          end
+          FORMULA
+          # Push
+          git config user.name "Gitea CI"
+          git config user.email "ci@gitea.roboalch.com"
           git add Formula/tfc.rb
-          git diff --cached --quiet && echo "No changes to commit" && exit 0
-          git commit -m "tfc: bump to ${TAG}"
-          git push origin master
+          git commit -m "tfc: bump to ${{ steps.tag.outputs.VERSION }}"
+          git push https://ci:${TAP_TOKEN}@gitea.roboalch.com/roboalchemist/homebrew-private.git main
