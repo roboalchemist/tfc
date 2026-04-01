@@ -25,7 +25,7 @@ brews:
     repository:
       owner: roboalchemist
       name: homebrew-tap
-      token: "{{ .Env.GITHUB_TOKEN }}"
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
     directory: Formula
     homepage: "https://gitea.roboalch.com/roboalchemist/tfc"
     description: "CLI for Terraform Cloud (HCP Terraform) API"
